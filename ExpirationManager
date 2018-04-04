@@ -1,0 +1,175 @@
+/*
+Project Name: Expiration Tracker Script
+Name: Joey Topasna
+Description: this script has been developed to track items of a certain type and send custom notifications to
+people who need to know
+*/
+
+
+
+
+
+
+
+/*
+Column Constants
+*/
+var OWNER_EMAIL_COLUMN = 1; //users' email for owner of items
+var EXPIRATION_DATE_COLUMN = 2; //where user puts expiration date
+var OWNER_FIRST_NAME_COLUMN = 3; //first names of item owners
+var OWNER_LAST_NAME_COLUMN = 4; //last names of item owners
+var RECIPIENT_EMAIL = 5; //email of person to get notification
+var EXPIRING_ITEM_COLUMN = 10; //item that is expiring
+var DESIRED_URL_COLUMN = 14; //URL that user can specify is sent in notifications
+
+
+
+
+
+/*
+Row Constants
+*/
+var FIRST_ROW = 2; // first row that can contain data from the user
+var FIRST_COLUMN = 1; // first column that can contain data from the user
+var NUM_OF_HEADING = 1; // # of heading rows in spreadsheet
+var TODAY = new Date(); //today's date
+
+
+
+
+
+
+
+/*
+Function Name: onOpen()
+PreCondition: User opens linked google sheet
+PostCondition: onOpen calls Spreadsheet service to retrieve user interface class and creates menu object.
+*/
+function onOpen() {
+
+  var ui = SpreadsheetApp.getUi();
+    
+    ui.createMenu('Expiration Tracker Menu')
+      
+      .addItem('Check for Expirations', 'mainTestFunction')
+      
+      .addToUi();
+      
+}
+
+
+
+
+
+/*
+Function Name: mainTestFunction()
+PreCondition:
+PostCondition:
+*/
+function mainTestFunction() {
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); //returns instance of spreadsheet class
+  
+  //var sheet = ss.getSheets()[0];
+  
+  var cellArray = getCellArray(ss, FIRST_ROW, FIRST_COLUMN); //returns cell array of first sheet in spreadsheet
+  
+  Logger.log(cellArray);
+  
+  var numRows = ss.getSheets()[0].getDataRange().getNumRows();
+  var numCols = ss.getSheets()[0].getDataRange().getNumColumns();
+  
+  var headingRange = ss.getSheets()[0].getRange(1,1, 1, numCols);  //returns instance of range class for heading row starting with Cell A1
+  
+  var headingArray = headingRange.getValues(); //returns array of values in heading row
+  
+  
+  
+  for(i = 0; i < numRows - 1; i++) {
+    
+    Logger.log(cellArray[i][EXPIRATION_DATE_COLUMN]);
+    
+    if(cellArray[i][EXPIRATION_DATE_COLUMN] <= TODAY) {
+      
+       
+      //sendMail(cellArray[i]);
+      
+    } 
+    
+  }
+ 
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ /*
+ Function Name:
+ Precondition:
+ Postcondition:
+ */
+function sendMail(arrayOfRow) {
+ 
+   var subjectLine = "REMINDER: " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + " has a " + arrayOfRow[EXPIRING_ITEM_COLUMN] + " expiring on " + arrayOfRow[EXPIRATION_DATE_COLUMN];
+ 
+   var htmlString = "Expiration date is: \n" + arrayOfRow[EXPIRATION_DATE_COLUMN];
+   
+   htmlString += "\n for " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + "'s " + arrayOfRow[EXPIRING_ITEM_COLUMN]; 
+   
+   
+   //Email Headers
+   var doggyURL = UrlFetchApp.fetch(arrayOfRow[DESIRED_URL_COLUMN]);
+   var doggyBlob = doggyURL.getBlob().setName("doggyBlob");
+   
+   //MailApp.sendEmail(arrayOfRow[RECIPIENT_EMAIL], subjectLine, htmlString);
+   
+   MailApp.sendEmail({
+   to: arrayOfRow[RECIPIENT_EMAIL],
+   subject: "Reminder: " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + "'s " + arrayOfRow[EXPIRING_ITEM_COLUMN] + " expired on " + arrayOfRow[EXPIRATION_DATE_COLUMN],
+   htmlBody: 
+   
+   "<head> Hello this is a test of HTML Body </head>" + "<img src='cid:doggyPic'/>",
+   
+   inlineImages: {
+   
+     doggyPic: doggyBlob, 
+   
+   
+   },
+   
+    replyTo: "jtopasna@alumni.stanford.edu"
+
+   
+   
+   });
+ 
+}
+
+
+
+
+
+/*
+Function Name:
+Precondition:
+Postcondition: returns instance of range class for the first sheet for all cells that contain data
+*/
+function getCellArray(spreadsheet, startRow, startCol) {
+
+  if(startRow < 2) { 
+  
+    var sheet = 
+  
+  } else {
+
+  var sheet = spreadsheet.getSheets()[0]; //returns instance of range class for the first sheet in the spreadsheet
+ 
+  var dataRange = sheet.getRange(startRow, startCol, sheet.getDataRange().getNumRows() - 1, sheet.getDataRange().getNumColumns()); //returns instance of range class -- skipping header row
+  
+  }
+  
+  return dataRange.getValues();
+
+}
