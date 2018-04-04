@@ -13,6 +13,7 @@ people who need to know
 
 /*
 Column Constants
+TODO: see if there's a way for script not to have global constants
 */
 var OWNER_EMAIL_COLUMN = 1; //users' email for owner of items
 var EXPIRATION_DATE_COLUMN = 2; //where user puts expiration date
