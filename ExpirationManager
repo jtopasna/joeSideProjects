@@ -1,8 +1,7 @@
 /*
 Project Name: Expiration Tracker Script
 Name: Joey Topasna
-Description: this script has been developed to track items of a certain type and send custom notifications to
-people who need to know
+Description: this script has been developed to track dates and notify people who need to know via email.
 */
 
 
