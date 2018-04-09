@@ -1,7 +1,9 @@
 /*
-Project Name: Expiration Tracker Script
+Project Name: Level 1 - Expiration Manager (Expired Mailmerge)
 Name: Joey Topasna
-Description: this script has been developed to track dates and notify people who need to know via email.
+Date: 04/08/18
+Description: this script can send custom email notifications to different email addresses depending on whether the
+item has expired.
 */
 
 
@@ -9,32 +11,17 @@ Description: this script has been developed to track dates and notify people who
 
 
 
+//column type and corresponding index
+var MGR_NAME_COL = 0;
+var MGR_EMAIL_COL = 1;
+var ITEM_TYPE_COL = 2;
+var EXPIRATION_COL = 3;
+var ITEM_NAME = 4;
+var SENDER_NAME = 5;
+var SENDER_TITLE = 6;
+var ADMIN_EMAIL = 7;
 
-/*
-Column Constants
-TODO: see if there's a way for script not to have global constants
-*/
-var OWNER_EMAIL_COLUMN = 1; //users' email for owner of items
-var EXPIRATION_DATE_COLUMN = 2; //where user puts expiration date
-var OWNER_FIRST_NAME_COLUMN = 3; //first names of item owners
-var OWNER_LAST_NAME_COLUMN = 4; //last names of item owners
-var RECIPIENT_EMAIL = 5; //email of person to get notification
-var EXPIRING_ITEM_COLUMN = 10; //item that is expiring
-var DESIRED_URL_COLUMN = 14; //URL that user can specify is sent in notifications
-
-
-
-
-
-/*
-Row Constants
-*/
-var FIRST_ROW = 2; // first row that can contain data from the user
-var FIRST_COLUMN = 1; // first column that can contain data from the user
-var NUM_OF_HEADING = 1; // # of heading rows in spreadsheet
-var TODAY = new Date(); //today's date
-
-
+var TODAY = new Date();
 
 
 
@@ -51,10 +38,12 @@ function onOpen() {
     
     ui.createMenu('Expiration Tracker Menu')
       
-      .addItem('Check for Expirations', 'mainTestFunction')
+      .addItem('Send Notifications for Expired Items', 'notifyExpiredOwners')
+    
+      .addItem('Show Remaining Quota', 'showQuota')
       
       .addToUi();
-      
+  
 }
 
 
@@ -62,114 +51,223 @@ function onOpen() {
 
 
 /*
-Function Name: mainTestFunction()
-PreCondition:
-PostCondition:
+Function Name: showQuota()
+PreCondition: active spreadsheet UI service
+PostCondition: calls UI and performs alert to display remaining mail quota for google user.
 */
-function mainTestFunction() {
+function showQuota() {
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet(); //returns instance of spreadsheet class
+  var ui = SpreadsheetApp.getUi();
   
-  //var sheet = ss.getSheets()[0];
-  
-  var cellArray = getCellArray(ss, FIRST_ROW, FIRST_COLUMN); //returns cell array of first sheet in spreadsheet
-  
-  Logger.log(cellArray);
-  
-  var numRows = ss.getSheets()[0].getDataRange().getNumRows();
-  var numCols = ss.getSheets()[0].getDataRange().getNumColumns();
-  
-  var headingRange = ss.getSheets()[0].getRange(1,1, 1, numCols);  //returns instance of range class for heading row starting with Cell A1
-  
-  var headingArray = headingRange.getValues(); //returns array of values in heading row
-  
-  
-  
-  for(i = 0; i < numRows - 1; i++) {
-    
-    Logger.log(cellArray[i][EXPIRATION_DATE_COLUMN]);
-    
-    if(cellArray[i][EXPIRATION_DATE_COLUMN] <= TODAY) {
-      
+  ui.alert('Remaining Quota is: ' + MailApp.getRemainingDailyQuota());
+
+  Logger.log(MailApp.getRemainingDailyQuota());
+
+}
+
+
+
+
+
+
+
+/*
+Function Name: notifyExpiredOwners()
+PreCondition: user opened spreadsheet + UI custom menu displayed
+PostCondition: calls sendEmailNotification() function which emails only the emails/persons designated as expired in the
+active spreadsheet
+*/
+function notifyExpiredOwners() {
+
+    var activeCellArray = activeSpreadsheetCellArray();
+        
+    var expiringRowsArray = expiringRows(activeCellArray);
        
-      //sendMail(cellArray[i]);
-      
-    } 
-    
-  }
- 
- }
- 
- 
- 
- 
- 
- 
- /*
- Function Name:
- Precondition:
- Postcondition:
- */
-function sendMail(arrayOfRow) {
- 
-   var subjectLine = "REMINDER: " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + " has a " + arrayOfRow[EXPIRING_ITEM_COLUMN] + " expiring on " + arrayOfRow[EXPIRATION_DATE_COLUMN];
- 
-   var htmlString = "Expiration date is: \n" + arrayOfRow[EXPIRATION_DATE_COLUMN];
-   
-   htmlString += "\n for " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + "'s " + arrayOfRow[EXPIRING_ITEM_COLUMN]; 
-   
-   
-   //Email Headers
-   var doggyURL = UrlFetchApp.fetch(arrayOfRow[DESIRED_URL_COLUMN]);
-   var doggyBlob = doggyURL.getBlob().setName("doggyBlob");
-   
-   //MailApp.sendEmail(arrayOfRow[RECIPIENT_EMAIL], subjectLine, htmlString);
-   
-   MailApp.sendEmail({
-   to: arrayOfRow[RECIPIENT_EMAIL],
-   subject: "Reminder: " + arrayOfRow[OWNER_FIRST_NAME_COLUMN] + "'s " + arrayOfRow[EXPIRING_ITEM_COLUMN] + " expired on " + arrayOfRow[EXPIRATION_DATE_COLUMN],
-   htmlBody: 
-   
-   "<head> Hello this is a test of HTML Body </head>" + "<img src='cid:doggyPic'/>",
-   
-   inlineImages: {
-   
-     doggyPic: doggyBlob, 
-   
-   
-   },
-   
-    replyTo: "jtopasna@alumni.stanford.edu"
+    //for each expiring row, push into HTML template + send
+    for(i = 0; i < expiringRowsArray.length; i++) {
+       
+      var htmlTemplate = createPushHtmlVars(expiringRowsArray[i]);
 
-   
-   
-   });
- 
+      var htmlBODY = htmlTemplate
+          .evaluate()
+          .getContent();
+          
+      sendEmailNotification(expiringRowsArray[i], htmlBODY);
+
+    }
+        
 }
+
 
 
 
 
 
 /*
-Function Name:
-Precondition:
-Postcondition: returns instance of range class for the first sheet for all cells that contain data
+Function Name: activeSpreadsheetCellArray()
+PreCondition: user opened spreadsheet
+PostCondition: returns a two-dimensional array of values that represent the cells in the active spreadsheet
 */
-function getCellArray(spreadsheet, startRow, startCol) {
+function activeSpreadsheetCellArray() {
 
-  if(startRow < 2) { 
-  
-    var sheet = 
-  
-  } else {
+  var activeCellRange = SpreadsheetApp.getActiveSpreadsheet()
+      .getDataRange();
 
-  var sheet = spreadsheet.getSheets()[0]; //returns instance of range class for the first sheet in the spreadsheet
- 
-  var dataRange = sheet.getRange(startRow, startCol, sheet.getDataRange().getNumRows() - 1, sheet.getDataRange().getNumColumns()); //returns instance of range class -- skipping header row
-  
-  }
-  
-  return dataRange.getValues();
+  return activeCellRange.getValues();
 
 }
+
+
+
+
+
+
+/*
+Function Name: expiringRows()
+PreCondition: takes an array, cycling through all rows checking the expiration
+PostCondition: returns an array of only the rows that are expiring in the spreadsheet
+*/
+function expiringRows(array) {
+
+  var arrayOfExpiring = [];
+
+  for(i = 1; i < array.length; i++) {
+    
+    if(array[i][EXPIRATION_COL] < TODAY) {
+      
+      arrayOfExpiring.push(array[i]);
+    
+    }
+    
+  }
+
+  return arrayOfExpiring;
+
+}
+
+
+
+
+
+
+/*
+Function Name: createPushHtmlVars()
+PreCondition: takes an array of values that represent the row of an expiring item & associated info
+PostCondition: returns a template HTML that pushes values to correspond with variables in the HTML template
+*/
+function createPushHtmlVars(expiringRow) {
+
+  var template = HtmlService
+    .createTemplateFromFile('lvl1MMHtml');
+      
+  for(j = 0; j < expiringRow.length; j++) {
+    
+    switch(j) {
+    
+      case 0:
+        
+        template.data0 = expiringRow[0];
+        break;
+        
+      case 1:
+      
+        template.data1 = expiringRow[1];
+        
+        break;
+      
+      case 2:
+      
+        template.data2 = expiringRow[2];
+        break;
+        
+      case 3:
+      
+        template.data3 = expiringRow[3];
+       
+        break;
+        
+      case 4:
+      
+        template.data4 = expiringRow[4];
+        break;
+        
+        
+      case 5:
+        
+        template.data5 = expiringRow[5];
+        break;
+        
+      case 6:
+        
+        template.data6 = expiringRow[6];
+        break;
+        
+      case 7:
+        
+        template.data7 = expiringRow[7];
+        break;
+      
+      default:   
+      
+        template.data0 = "ERROR";
+        template.data1 = "ERROR";
+        template.data2 = "ERROR";
+        template.data3 = "ERROR";
+        template.data4 = "ERROR";
+        template.data5 = "ERROR";
+        template.data6 = "ERROR";
+        break;
+  
+    
+    }
+  
+  }
+
+  return template;
+
+}
+
+
+
+
+
+
+/*
+Function Name: expirationSubjectLine()
+PreCondition: takes an array representing an expiring row
+PostCondition: returns a string that corresponds to what the subject line should be for a notifications
+*/
+function expirationSubjectLine(expiringRow) {
+
+  var subjLineString = "";
+  
+  subjLineString = "Reminder: " + expiringRow[MGR_NAME_COL] + "'s " + expiringRow[ITEM_NAME] + " expired on " + expiringRow[EXPIRATION_COL];
+
+  return subjLineString;
+
+}
+
+
+
+
+/*
+Function Name: sendEmailNotification()
+PreCondition: takes the expiring row and the content of the html template that has been pushed values
+PostCondition: sends email to recipient using the google MailApp web service
+*/
+function sendEmailNotification(expiringRow, htmlMessage) {
+    
+    var subj = expirationSubjectLine(expiringRow);
+        
+    var recipient = expiringRow[MGR_EMAIL_COL];
+    
+    MailApp.sendEmail({
+    to: recipient,
+    subject: subj,
+    htmlBody: htmlMessage,
+    replyTo: expiringRow[ADMIN_EMAIL]
+    
+    });
+
+}
+
