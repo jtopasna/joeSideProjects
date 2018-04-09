@@ -26,7 +26,7 @@ This C++ command-line "game" records high-score data for a fictitious game. The 
 This C++ project creates a Fraction Class, and it overloads the operators to handle dealing with fractions (e.g. the class will allow users to add two fractions (1/2 + 1/2), multiply (1/3*4/3), divide (2/1 / 3/2), etc. using the standard operators.
 
 
-**Project 6 Name: 'Poker Hand' Analyzer**
+**Project 5 Name: 'Poker Hand' Analyzer**
 This C++ command line game reads five cards from the user, then analyzes the cards
  and prints out the category of hand that they represent. Poker hands are categorized according to the following labels: Straight flush, four of a kind, full house, straight, flush, three of a kind, two pairs, pair, 
  high card. To make things easier, the game ignores suits and face cards.
