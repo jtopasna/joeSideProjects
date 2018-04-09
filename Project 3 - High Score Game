@@ -1,0 +1,193 @@
+/*
+ 
+ Joseph Topasna
+ 
+ This program stores the data in a dynamic array of structs called HighScore. Each high score struct can store a char array of a name which corresponds to an int score.
+ 
+ This program records high-score data for a fictitious game. The program
+ asks the user how many scores they will enter, each of which will correspond to
+ a different student.
+ 
+ The program will ask the user how many names/scores they will enter, and it will use one DYNAMIC ARRAY of structs which will store user input.
+ 
+ It will store the data in the dynamically allocated array of structs and print out the results in descending order.
+ 
+ */
+
+
+
+
+
+
+#include <iostream>
+
+using namespace std;
+
+
+const int MAX_CHARS = 24;
+
+
+struct HighScore
+{
+    int score;                  //stores score corresponding to name in name[]
+    char name[MAX_CHARS];       //stores  user-entered name
+    
+};
+
+
+void initializeData(HighScore scores[], int size);
+
+
+void sortData(HighScore scores[], int size);
+
+
+void displayData(const HighScore scores[], int size);
+
+
+int main() {
+    
+    int userArraySize;
+    
+    cout << "How many scores will you enter?: ";
+    cin >> userArraySize;
+    
+    HighScore* scores = new HighScore[userArraySize];
+    
+    initializeData(scores, userArraySize);
+    
+    sortData(scores, userArraySize);
+    
+    displayData(scores, userArraySize);
+    
+    delete [] scores;
+    
+}
+
+
+
+
+
+
+/*
+ sortData() takes a dynamic array of HighScore structs called scores[] and an int
+ size corresponding to scores[]. sortData() will first scan through the score of
+ each element of the array scores[].
+ It will target the score of the struct at index 0 and compare it to the score of
+ each struct following it if any. If startScan encounters a struct with score that is
+ higher than the target struct's score, it will mark that struct and value as the
+ highest score.
+ 
+ sortData then swaps the highest scored struct found in the array with
+ the target struct in scores[].
+ 
+ Pre: scores[] is a dynamic array of HighScore structs. int size is a non-negative
+ int.
+ Post: scores[] is sorted in descending order according to each structs score
+ value.
+ */
+void sortData(HighScore scores[], int size) {
+    
+    for (int startScan = 0; startScan < size; startScan++) {
+
+        int highestNumIndex = startScan;
+        int highestNum = scores[startScan].score;
+        string highestScoreName = scores[startScan].name;
+        
+        for (int targetScan = startScan + 1; targetScan < size; targetScan++) {
+            
+            if (scores[targetScan].score > highestNum) { //if target is higher
+                
+                highestNum = scores[targetScan].score; //set highest number to target
+                highestNumIndex = targetScan; //set highest index to target index
+                highestScoreName = scores[targetScan].name; //reset highest scorer name
+                
+            }
+        }
+        
+        swap(scores[highestNumIndex],scores[startScan]); //swaps strucs if higher val found
+    }
+}
+
+
+
+
+
+
+/*
+ initializeData() takes an array HighScore names[] and an int size.
+ 
+ initializeData() prompts the user to enter the name of the student and their
+ corresponding scores. initializeData() stores the user's responses in a HighScore
+ struct of names[] with a name and corresponding score.
+ initializeData() stops when the user inputs int size number of scores and names.
+ 
+ Pre: names[] of size int size is not initialized; int size is a non-negative int
+ Post: names[] is initialized with int size number of names and scores via
+ HighScore structs.
+ */
+void initializeData(HighScore scores[], int size) {
+    
+    for (int count = 0; count < size; count++) {
+        
+        cout << "Enter the name for score # " << count + 1 << ": ";
+        cin >> scores[count].name;
+        
+        cout << "Enter the score for score # " << count + 1 << ": ";
+        cin >> scores[count].score;
+        
+    }
+}
+
+
+
+
+
+
+/*
+ displayData() takes HighScore scores[] 'by value', and an int size.
+ 
+ It indicates to the user the top scorers, outputting the names of the players
+ in descending order. It outputs each struct in scores[] by name and corresponding
+ score.
+ 
+ Pre: scores[] must be initialized with names and corresponding scores in each
+ HighScore struct;
+ Post: scores[], and int size remain unchanged; displayData outputs all values
+ in each score structs name and score.
+ */
+void displayData(const HighScore scores[], int size) {
+    
+    cout << "Top Scorers: \n";
+    
+    for (int count = 0; count < size; count++) {
+        cout << scores[count].name << ": " << scores[count].score << endl;
+    }
+    
+}
+
+
+
+
+
+
+/*
+ SAMPLE OUTPUT
+ 
+ How many scores will you enter?: 4
+ Enter the name for score # 1: suzy
+ Enter the score for score # 1: 9900
+ Enter the name for score # 2: kim
+ Enter the score for score # 2: 100000
+ Enter the name for score # 3: armando
+ Enter the score for score # 3: 822
+ Enter the name for score # 4: tim
+ Enter the score for score # 4: 514
+ Top Scorers:
+ kim: 100000
+ suzy: 9900
+ armando: 822
+ tim: 514
+ Program ended with exit code: 0
+ 
+ 
+ */
