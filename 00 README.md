@@ -3,9 +3,11 @@
 **Project 1 Name: Level 1 - Expiration Manager**
 This Google appscript is a sophisticated version of mailmerge that allows users to send notifications depending on whether or not a particular 'item' has expired. For example, if an item type 'milk' expired on 04/01/2018, then the script can send an HTML-formatted email notifications to the 'owner' of the milk. This idea can be extended to other things (i.e. visas, licenses, certifications, etc.)
 
+04/08UPDATE:
 Next phase in development to automatically create google calendar reminders.
 
 Using a Twilio API, can be easily extended to include SMS notifications and reminders.
+
 
 **Project 2 Name: RubyTextAnalyzer**
 This Ruby script enables a user to get stats on a particular text or texts. The script will summarize word count, the number of "meaningful" words, the TEN MOST COMMON significant words. **The script will also output an 'abstract' that pulls ideal / meaninful sentences together.**  
