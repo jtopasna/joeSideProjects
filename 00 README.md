@@ -1,5 +1,12 @@
 # joeSideProjects
 
+**Project 0 Name: Level 1 - Teacher Gradebook + Classroom Manager** (04/08UPDATE: WORK IN PROGRESS)
+Minimum Requirements: google sheet appscript proof of concept that sends out weekly updates to parents on student scores. Should present relevant stats including class averages for parents along with a PDF attachment and any special notes (i.e. detentions, late assignments, etc.)
+
+https://www.teacherease.com/images/redesign_images/onlinegradebook/online-gradebook_1.png
+
+Moonshots: Twilio API for SMS, Parent dashboards per student
+
 **Project 1 Name: Level 1 - Expiration Manager**
 This Google appscript is a sophisticated version of mailmerge that allows users to send notifications depending on whether or not a particular 'item' has expired. For example, if an item type 'milk' expired on 04/01/2018, then the script can send an HTML-formatted email notifications to the 'owner' of the milk. This idea can be extended to other things (i.e. visas, licenses, certifications, etc.)
 
